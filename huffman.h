@@ -1,6 +1,9 @@
 #ifndef _BARTOSZS_HUFFMAN_
 #define _BARTOSZS_HUFFMAN_
 
+#include <stdint.h>
+#include "bitstream.h"
+
 struct huff_treeNode {
 	struct huff_treeNode* left;
 	struct huff_treeNode* right;
@@ -10,7 +13,8 @@ struct huff_treeNode {
 
 void huff_treeNodeFree(struct huff_treeNode* node);
 void huff_countChars(const char* text, uint32_t* freq);
-void huff_encodeChar(struct huff_treeNode* encoder, char symbol, uint32_t* pos);
+struct bitstream* huff_getCharBitstream(struct huff_treeNode* encoder, char symbol);
+/* void huff_encodeChar(struct huff_treeNode* encoder, char symbol, uint32_t* pos); */
 
 uint8_t huff_getCodeLength(struct huff_treeNode* node, char symbol);
 

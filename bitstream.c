@@ -9,7 +9,9 @@ static uint32_t roundToNext8(uint32_t a) {
 }
 
 static uint8_t doubleTheSizeFailed(struct bitstream* stream) {
-	/* this probably can be rewritten to something nicer */
+	if (stream == NULL)
+		abort();
+
 	stream->max_size = roundToNext8(stream->max_size << 1);
 	uint8_t* bits = realloc(stream->bits, sizeof(*(stream->bits)) * (stream->max_size >> 3));
 	if (bits == NULL)
@@ -32,7 +34,6 @@ struct bitstream* bitstream_init(uint32_t max_size) {
 	stream->max_size = roundToNext8(max_size);
 	stream->cur_pos = 0;
 
-	/* ceil max_size in bits to bytes*/
 	stream->bits = malloc(sizeof(*(stream->bits)) * (stream->max_size >> 3));
 	if (stream->bits == NULL) {
 		free(stream);
@@ -51,13 +52,13 @@ struct bitstream* bitstream_deepCopy(struct bitstream* stream) {
 	if (copied_stream == NULL)
 		return NULL;
 
-	memcpy(copied_stream->bits, stream->bits, sizeof(*(stream->bits)) * ((stream->max_size + 7) >> 3));
+	memcpy(copied_stream->bits, stream->bits, sizeof(*(stream->bits)) * (stream->max_size >> 3));
 	/* can memcpy fail? */
 	return copied_stream;
 }
 
 uint8_t bitstream_getBit(struct bitstream* stream, uint32_t pos) {
-	if (pos >= stream->cur_pos)
+	if (stream == NULL || pos >= stream->cur_pos)
 		abort();
 
 	return (stream->bits[pos >> 3] & (1 << (~pos & 7))) != 0;
@@ -68,10 +69,12 @@ void bitstream_copy(struct bitstream* src, struct bitstream* dest) {
 		abort();
 
 	for (int i = 0; i < src->cur_pos; i++)
-		bitstream_writeBit(dest, bitstream_getBit(src, i));
+		bitstream_appendBit(dest, bitstream_getBit(src, i));
 }
 
-void bitstream_writeBit(struct bitstream* stream, uint8_t value) {
+void bitstream_appendBit(struct bitstream* stream, uint8_t value) {
+	if (stream == NULL)
+		abort();
 	if (stream->cur_pos >= stream->max_size)
 		if (doubleTheSizeFailed(stream))
 			abort();
@@ -80,8 +83,8 @@ void bitstream_writeBit(struct bitstream* stream, uint8_t value) {
 	stream->cur_pos++;
 }
 
-uint8_t bitstream_removeBit(struct bitstream* stream) {
-	if (stream->cur_pos == 0)
+uint8_t bitstream_removeLastBit(struct bitstream* stream) {
+	if (stream == NULL || stream->cur_pos == 0)
 		abort();
 
 	uint8_t bit = bitstream_getBit(stream, stream->cur_pos - 1);
@@ -96,27 +99,11 @@ void bitstream_free(struct bitstream* stream) {
 }
 
 void bitstream_print(struct bitstream* stream) {
+	if (stream == NULL) {
+		printf("(null)\n");
+		return;
+	}
+
 	for (int i = 0; i < (stream->max_size) >> 3; i++)
 		printU8(stream->bits[i]);
-}
-
-int main() {
-	struct bitstream* stream1 = bitstream_init(4);
-	struct bitstream* stream2 = bitstream_init(4);
-
-	for (int i = 0; i < 7; i++)
-		bitstream_writeBit(stream1, 1);
-
-	for (int i = 0; i < 7; i++)
-		bitstream_writeBit(stream2, 0);
-
-	bitstream_copy(stream2, stream1);
-	bitstream_print(stream1);
-
-	/* while (stream->cur_pos != 0) { */
-	/* 	printf("%d\n", bitstream_getBit(stream, stream->cur_pos - 1)); */
-	/* 	bitstream_removeBit(stream); */
-	/* } */
-	bitstream_free(stream1);
-	bitstream_free(stream2);
 }

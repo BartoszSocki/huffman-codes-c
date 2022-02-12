@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include "bitstream.h"
 #include "huffman.h"
 #include "huff_minheap.h"
 
@@ -32,11 +33,24 @@ int main() {
 
 	struct huff_treeNode* encoder = heap->arr[0];
 	uint32_t encoded_message_length = 0;
+	/* calculating total message length*/
 	for (int i = 0; i < MAX; i++) {
 		if (freq[i] != 0)
-			encoded_message_length += freq[i] * huff_getCodeLength(encoder, i, 0);
+			encoded_message_length += freq[i] * huff_getCodeLength(encoder, i);
 	}
 
 	printf("total length: %d\n", encoded_message_length);
+
+	struct bitstream* encoded_chars[MAX] = {NULL};
+	for (int i = 0; i < MAX; i++) {
+		if (freq[i] != 0) {
+			encoded_chars[i] = huff_getCharBitstream(encoder, i);
+		}
+	}
+	/* printf("%p\n", encoded_chars['a']); */
+	bitstream_print(encoded_chars['a']);
+	bitstream_print(encoded_chars['b']);
+	bitstream_print(encoded_chars['c']);
+	bitstream_print(encoded_chars['d']);
 }
 
