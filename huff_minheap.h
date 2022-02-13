@@ -1,5 +1,5 @@
-#ifndef _BARTOSZS_HUFF_MINHEAP_
-#define _BARTOSZS_HUFF_MINHEAP_
+#ifndef _HUFF_MINHEAP_IS_INCLUDED_
+#define _HUFF_MINHEAP_IS_INCLUDED_
 
 #include "huffman.h"
 

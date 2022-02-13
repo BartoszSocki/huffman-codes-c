@@ -1,8 +1,10 @@
-#ifndef _BARTOSZS_HUFFMAN_
-#define _BARTOSZS_HUFFMAN_
+#ifndef _HUFFMAN_IS_INCLUDED_
+#define _HUFFMAN_IS_INCLUDED_
 
 #include <stdint.h>
 #include "bitstream.h"
+
+#define MAX 256
 
 struct huff_treeNode {
 	struct huff_treeNode* left;

@@ -67,6 +67,56 @@ struct bitstream* huff_getCharBitstream(struct huff_treeNode* encoder, char symb
 	return stream;
 }
 
-/* void huff_encodeChar(struct huff_treeNode* encoder, char symbol, uint32_t* pos) { */
+struct huff_treeNode* huffman(char* message, uint32_t freq[MAX]) {
+	huff_countChars(message, freq);
+	struct huff_minHeap* heap = huff_heap(MAX);
 
-/* } */
+	for (int i = 0; i < MAX; i++) {
+		if (freq[i] != 0) {
+			struct huff_treeNode* elem = malloc(sizeof(*elem));
+			*elem = (struct huff_treeNode){NULL, NULL, i, freq[i]};
+			huff_heapInsert(heap, elem);
+		}
+	}
+
+	/* merging two binary trees with the lowest probability (in this case with the lowest frequency) */
+	while (heap->cur_size > 1) {
+		struct huff_treeNode* a = huff_heapPop(heap);
+		struct huff_treeNode* b = huff_heapPop(heap);
+		struct huff_treeNode* c = malloc(sizeof(*c));
+		*c = (struct huff_treeNode){a, b, 0, a->freq + b->freq};
+		huff_heapInsert(heap, c);
+	}
+
+	return heap->arr[0];
+}
+
+uint32_t huff_getTotalMessageLength(struct huff_treeNode* encoder, uint32_t freq[MAX]) {
+	uint32_t encoded_message_length = 0;
+	for (int i = 0; i < MAX; i++) {
+		if (freq[i] != 0)
+			encoded_message_length += freq[i] * huff_getCodeLength(encoder, i);
+	}
+}
+
+struct bitstream* huff_getEncoding(struct huff_treeNode* encoder, uint32_t freq[MAX]) {
+	/* creating encoder: A -> 01, B -> 00, ... */
+	struct bitstream* encoded_chars[MAX] = {NULL};
+	for (int i = 0; i < MAX; i++) {
+		if (freq[i] != 0) {
+			encoded_chars[i] = huff_getCharBitstream(encoder, i);
+			/* printf("%c: ", i); */
+			/* bitstream_print(encoded_chars[i]); */
+		}
+	}
+	return encoded_chars;
+}
+
+struct bitstream* huff_encodeMessage(struct huff_treeNode* encoder, const char* message, uint32_t freq[MAX]) {
+	/* encoding message */
+	struct bitstream* encoded_message = bitstream_init(huff_getTotalMessageLength(encoder, freq));
+	for (int i = 0; message[i] != '\0'; i++) {
+		bitstream_copy(encoded_chars[message[i]], encoded_message);
+	}
+	return encoded_message;
+}

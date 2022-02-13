@@ -9,7 +9,7 @@
 
 int main() {
 	uint32_t freq[MAX] = {0}; 
-	char* message = "aaaabbbbcccc";
+	char* message = "aaaabbcc";
 
 	huff_countChars(message, freq);
 	struct huff_minHeap* heap = huff_heap(MAX);
@@ -39,18 +39,24 @@ int main() {
 			encoded_message_length += freq[i] * huff_getCodeLength(encoder, i);
 	}
 
-	printf("total length: %d\n", encoded_message_length);
+	/* printf("total length: %d\n", encoded_message_length); */
 
+	/* creating encoder: A -> 01, B -> 00, ... */
 	struct bitstream* encoded_chars[MAX] = {NULL};
 	for (int i = 0; i < MAX; i++) {
 		if (freq[i] != 0) {
 			encoded_chars[i] = huff_getCharBitstream(encoder, i);
+			printf("%c: ", i);
+			bitstream_print(encoded_chars[i]);
 		}
 	}
-	/* printf("%p\n", encoded_chars['a']); */
-	bitstream_print(encoded_chars['a']);
-	bitstream_print(encoded_chars['b']);
-	bitstream_print(encoded_chars['c']);
-	bitstream_print(encoded_chars['d']);
+
+	/* encoding message */
+	struct bitstream* encoded_message = bitstream_init(encoded_message_length);
+	for (int i = 0; message[i] != '\0'; i++) {
+		bitstream_copy(encoded_chars[message[i]], encoded_message);
+	}
+
+	bitstream_print(encoded_message);
 }
 
