@@ -5,58 +5,16 @@
 #include "huffman.h"
 #include "huff_minheap.h"
 
-#define MAX 256
-
-int main() {
+int main(int argc, char** argv) {
+	char* message = (argc > 1) ? argv[1] : "this is a default message";
 	uint32_t freq[MAX] = {0}; 
-	char* message = "aaaabbcc";
 
 	huff_countChars(message, freq);
-	struct huff_minHeap* heap = huff_heap(MAX);
-
-	for (int i = 0; i < MAX; i++) {
-		if (freq[i] != 0) {
-			struct huff_treeNode* elem = malloc(sizeof(*elem));
-			*elem = (struct huff_treeNode){NULL, NULL, i, freq[i]};
-			huff_heapInsert(heap, elem);
-		}
-	}
-
-	/* merging two binary trees with the lowest probability (in this case with the lowest frequency) */
-	while (heap->cur_size > 1) {
-		struct huff_treeNode* a = huff_heapPop(heap);
-		struct huff_treeNode* b = huff_heapPop(heap);
-		struct huff_treeNode* c = malloc(sizeof(*c));
-		*c = (struct huff_treeNode){a, b, 0, a->freq + b->freq};
-		huff_heapInsert(heap, c);
-	}
-
-	struct huff_treeNode* encoder = heap->arr[0];
-	uint32_t encoded_message_length = 0;
-	/* calculating total message length*/
-	for (int i = 0; i < MAX; i++) {
-		if (freq[i] != 0)
-			encoded_message_length += freq[i] * huff_getCodeLength(encoder, i);
-	}
-
-	/* printf("total length: %d\n", encoded_message_length); */
-
-	/* creating encoder: A -> 01, B -> 00, ... */
-	struct bitstream* encoded_chars[MAX] = {NULL};
-	for (int i = 0; i < MAX; i++) {
-		if (freq[i] != 0) {
-			encoded_chars[i] = huff_getCharBitstream(encoder, i);
-			printf("%c: ", i);
-			bitstream_print(encoded_chars[i]);
-		}
-	}
-
-	/* encoding message */
-	struct bitstream* encoded_message = bitstream_init(encoded_message_length);
-	for (int i = 0; message[i] != '\0'; i++) {
-		bitstream_copy(encoded_chars[message[i]], encoded_message);
-	}
-
+	struct huff_treeNode* encoder = huffman(message, freq);
+	struct bitstream** char_to_bits = huff_getEncoding(encoder, freq);
+	struct bitstream* encoded_message = huff_encodeMessage(encoder, message, freq);
+	
 	bitstream_print(encoded_message);
-}
 
+	huff_decodeMessage(encoded_message, encoder);
+}

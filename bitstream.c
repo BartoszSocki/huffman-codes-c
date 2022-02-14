@@ -104,6 +104,6 @@ void bitstream_print(struct bitstream* stream) {
 		return;
 	}
 
-	for (int i = 0; i < (stream->max_size) >> 3; i++)
+	for (int i = 0; i < roundToNext8(stream->cur_pos) >> 3; i++)
 		printU8(stream->bits[i]);
 }
