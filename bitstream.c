@@ -30,7 +30,9 @@ static void printU8(uint8_t a) {
 
 struct bitstream* bitstream_init(uint32_t max_size) {
 	struct bitstream* stream = malloc(sizeof(*stream));
-	/* round to multiple of 8 */
+	if (stream == NULL)
+		return NULL;
+
 	stream->max_size = roundToNext8(max_size);
 	stream->cur_pos = 0;
 
@@ -47,13 +49,13 @@ struct bitstream* bitstream_deepCopy(struct bitstream* stream) {
 		return NULL;
 
 	struct bitstream* copied_stream = bitstream_init(stream->max_size);
-	copied_stream->cur_pos = stream->cur_pos;
-
 	if (copied_stream == NULL)
 		return NULL;
 
-	memcpy(copied_stream->bits, stream->bits, sizeof(*(stream->bits)) * (stream->max_size >> 3));
+	copied_stream->cur_pos = stream->cur_pos;
+
 	/* can memcpy fail? */
+	memcpy(copied_stream->bits, stream->bits, sizeof(*(stream->bits)) * (stream->max_size >> 3));
 	return copied_stream;
 }
 
@@ -94,6 +96,9 @@ uint8_t bitstream_removeLastBit(struct bitstream* stream) {
 }
 
 void bitstream_free(struct bitstream* stream) {
+	if (stream == NULL)
+		return;
+
 	free(stream->bits);
 	free(stream);
 }
@@ -104,6 +109,7 @@ void bitstream_print(struct bitstream* stream) {
 		return;
 	}
 
-	for (int i = 0; i < roundToNext8(stream->cur_pos) >> 3; i++)
+	uint32_t size = roundToNext8(stream->cur_pos) >> 3;
+	for (int i = 0; i < size; i++)
 		printU8(stream->bits[i]);
 }

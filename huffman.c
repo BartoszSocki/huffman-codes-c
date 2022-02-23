@@ -22,7 +22,10 @@ void huff_treeNodeFree(struct huff_treeNode* node) {
 	free(node);
 }
 
-void huff_countChars(const char* text, uint32_t* freq) {
+void huff_countChars(const char* text, uint32_t freq[MAX]) {
+	if (freq == NULL)
+		abort();
+
 	for (int i = 0; text[i] != '\0'; i++)
 		freq[text[i]]++;
 }
@@ -32,7 +35,7 @@ uint8_t huff_getCodeLength(struct huff_treeNode* encoder, char symbol) {
 }
 
 static int8_t huff_getCharBitstreamHelper(struct huff_treeNode* encoder, struct bitstream* stream, char symbol) {
-	if (encoder == NULL)
+	if (encoder == NULL || stream == NULL)
 		return 0;
 	if (encoder->symbol == symbol) {
 		return 1;
@@ -54,6 +57,9 @@ static int8_t huff_getCharBitstreamHelper(struct huff_treeNode* encoder, struct 
 }
 
 struct bitstream* huff_getCharBitstream(struct huff_treeNode* encoder, char symbol) {
+	if (encoder == NULL)
+		return bitstream_init(0);
+	
 	uint8_t len = huff_getCodeLength(encoder, symbol);
 	if (len == 0)
 		return NULL;
@@ -68,6 +74,9 @@ struct bitstream* huff_getCharBitstream(struct huff_treeNode* encoder, char symb
 }
 
 struct huff_treeNode* huffman(char* message, uint32_t freq[MAX]) {
+	if (freq == NULL)
+		abort();
+
 	huff_countChars(message, freq);
 	struct huff_minHeap* heap = huff_heap(MAX);
 
@@ -92,6 +101,9 @@ struct huff_treeNode* huffman(char* message, uint32_t freq[MAX]) {
 }
 
 uint32_t huff_getTotalMessageLength(struct huff_treeNode* encoder, uint32_t freq[MAX]) {
+	if (encoder == NULL || freq == NULL)
+		abort();
+
 	uint32_t encoded_message_length = 0;
 	for (int i = 0; i < MAX; i++) {
 		if (freq[i] != 0)
@@ -101,8 +113,12 @@ uint32_t huff_getTotalMessageLength(struct huff_treeNode* encoder, uint32_t freq
 }
 
 struct bitstream** huff_getEncoding(struct huff_treeNode* encoder, uint32_t freq[MAX]) {
+	if (encoder == NULL || freq == NULL)
+		abort();
+
 	/* creating encoder: A -> 01, B -> 00, ... */
 	struct bitstream** encoded_chars = calloc(MAX, sizeof(*encoded_chars));
+
 	for (int i = 0; i < MAX; i++) {
 		if (freq[i] != 0) {
 			encoded_chars[i] = huff_getCharBitstream(encoder, i);
@@ -112,7 +128,13 @@ struct bitstream** huff_getEncoding(struct huff_treeNode* encoder, uint32_t freq
 }
 
 struct bitstream* huff_encodeMessage(struct huff_treeNode* encoder, const char* message, uint32_t freq[MAX]) {
+	if (encoder == NULL || freq == NULL) 
+		abort();
+
 	struct bitstream** encoded_chars = huff_getEncoding(encoder, freq);
+	/* abort because cannot allocate space */
+	if (encoded_chars == NULL)
+		abort();
 	
 	/* encoding message */
 	struct bitstream* encoded_message = bitstream_init(huff_getTotalMessageLength(encoder, freq));
@@ -123,6 +145,9 @@ struct bitstream* huff_encodeMessage(struct huff_treeNode* encoder, const char* 
 }
 
 void huff_decodeMessage(struct bitstream* message, struct huff_treeNode* encoder) {
+	if (encoder == NULL || message == NULL)
+		abort();
+
 	for (int i = 0; i < message->cur_pos; ) {
 		struct huff_treeNode* head = encoder;
 		/* printf("i: %d\n", i); */

@@ -4,16 +4,6 @@
 #include "huffman.h"
 #include "huff_minheap.h"
 
-/* this should be deleted */
-static void preorderPrint(struct huff_treeNode* node) {
-	if (node == NULL)
-		return;
-
-	printf("%c: %d\n", node->symbol, node->freq);
-	preorderPrint(node->left);
-	preorderPrint(node->right);
-}
-
 static void swap(struct huff_treeNode* a, struct huff_treeNode* b) {
 	struct huff_treeNode tmp = *a;
 	*a = *b;
